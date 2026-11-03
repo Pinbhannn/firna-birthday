@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Pixel Heart — Firna ❤️</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .qr-page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding: 28px 18px 40px;
+      position: relative;
+      z-index: 1;
+      overflow-y: auto;
+      color: #f8edf0;
+      background: #050508;
+    }
+    .qr-page h1 {
+      font-family: var(--font-script);
+      font-weight: 400;
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
+      color: #ff3158;
+      text-align: center;
+    }
+    .qr-page .sub {
+      color: #c7abb3;
+      font-weight: 600;
+      text-align: center;
+      max-width: 460px;
+      font-size: 0.95rem;
+    }
+    .qr-panel {
+      background: #0b090c;
+      border: 1px solid #3e1720;
+      border-radius: 20px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 32px rgba(230, 20, 58, 0.12);
+      padding: 20px;
+      width: min(100%, 520px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #qr-canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      background: #050508;
+    }
+    .qr-label {
+      font-weight: 700;
+      color: #ffe9ef;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+    }
+    .qr-url-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    #qr-url {
+      flex: 1 1 220px;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 0.8em 1em;
+      border-radius: 14px;
+      border: 2px solid #5e2634;
+      background: #151014;
+      color: #fff0f4;
+      outline: none;
+    }
+    #qr-url:focus { border-color: #ff5270; background: #1d1117; }
+    .swatches { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px var(--pink-200), 0 4px 10px rgba(214, 51, 108, 0.25);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      padding: 0;
+    }
+    .swatch:hover { transform: scale(1.12); }
+    .swatch.on { box-shadow: 0 0 0 3px var(--rose), 0 4px 12px rgba(214, 51, 108, 0.4); transform: scale(1.1); }
+    #qr-custom {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      background: none;
+      padding: 0;
+    }
+    .qr-tip {
+      font-size: 0.8rem;
+      color: #d1b8c0;
+      line-height: 1.55;
+      background: #151014;
+      border: 1.5px dashed #5e2634;
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .qr-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
+<body>
+  <main class="qr-page">
+    <h1>QR Pixel Heart 💗</h1>
+    <p class="sub">QR pixel-heart merah dengan latar gelap — masukkan URL website, lalu unduh PNG-nya.</p>
+
+    <div class="qr-panel">
+      <canvas id="qr-canvas" aria-label="Preview QR code pixel heart"></canvas>
+
+      <div>
+        <p class="qr-label">🔗 URL Website</p>
+        <div class="qr-url-row" style="margin-top:8px">
+          <input id="qr-url" type="text" spellcheck="false" placeholder="https://username.github.io/firna-birthday/">
+        </div>
+      </div>
+
+      <div>
+        <p class="qr-label">🎨 Warna Heart</p>
+        <div class="swatches" style="margin-top:8px" id="swatches">
+          <button class="swatch on" data-color="#D6336C" style="background:#D6336C" title="Rose Pink"></button>
+          <button class="swatch" data-color="#E83E8C" style="background:#E83E8C" title="Hot Pink"></button>
+          <button class="swatch" data-color="#C2185B" style="background:#C2185B" title="Berry Pink"></button>
+          <button class="swatch" data-color="#D32F2F" style="background:#D32F2F" title="Merah"></button>
+          <input id="qr-custom" type="color" value="#D6336C" title="Warna custom">
+        </div>
+      </div>
+
+      <p class="qr-tip">
+        💡 Pola QR dan area tenang tetap dipertahankan. Untuk hasil terbaik, gunakan warna terang, tampilkan layar dengan cerah, dan tes scan sebelum dicetak.
+      </p>
+
+      <div class="qr-actions">
+        <button class="btn btn-primary" id="btn-download">Download PNG ⬇️</button>
+        <a class="btn btn-soft" href="index.html" style="text-decoration:none">Lihat Website ❤️</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/qrcode.min.js"></script>
+  <script>
+    "use strict";
+
+    const DEFAULT_URL = "https://USERNAME.github.io/firna-birthday/";
+    const canvas = document.getElementById("qr-canvas");
+    const ctx = canvas.getContext("2d");
+    const urlInput = document.getElementById("qr-url");
+    const customInput = document.getElementById("qr-custom");
+    let currentColor = "#D6336C";
+
+    urlInput.value = DEFAULT_URL;
+
+    function heartPath(c, x, y, s) {
+      c.beginPath();
+      c.moveTo(x, y + s * 0.32);
+      c.bezierCurveTo(x + s * 0.56, y - s * 0.18, x + s * 0.36, y - s * 0.58, x, y - s * 0.2);
+      c.bezierCurveTo(x - s * 0.36, y - s * 0.58, x - s * 0.56, y - s * 0.18, x, y + s * 0.32);
+      c.closePath();
+    }
+
+    function drawBigHeart(c, cx, cy, s, fill) {
+      c.save();
+      c.translate(cx, cy);
+      c.fillStyle = fill;
+      c.beginPath();
+      c.moveTo(0, s * 0.32);
+      c.bezierCurveTo(s * 0.56, -s * 0.18, s * 0.36, -s * 0.58, 0, -s * 0.2);
+      c.bezierCurveTo(-s * 0.36, -s * 0.58, -s * 0.56, -s * 0.18, 0, s * 0.32);
+      c.closePath();
+      c.fill();
+      c.restore();
+    }
+
+    function buildQR(url) {
+      const qr = qrcode(0, "H");
+      qr.addData(url);
+      qr.make();
+      return qr;
+    }
+
+    function isInsideHeart(x, y) {
+      const sum = x * x + y * y - 1;
+      return sum * sum * sum - x * x * y * y * y <= 0;
+    }
+
+    function dimColor(hex, factor = 0.48) {
+      const value = hex.replace("#", "");
+      const r = Math.round(parseInt(value.slice(0, 2), 16) * factor);
+      const g = Math.round(parseInt(value.slice(2, 4), 16) * factor);
+      const b = Math.round(parseInt(value.slice(4, 6), 16) * factor);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function render() {
+      const url = urlInput.value.trim() || DEFAULT_URL;
+      let qr;
+      try {
+        qr = buildQR(url);
+      } catch (e) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#f4dce2";
+        ctx.font = "600 14px Quicksand, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("URL terlalu panjang untuk QR ini 😢", canvas.width / 2, 40);
+        return;
+      }
+
+      const S = 2;
+      const N = qr.getModuleCount();
+      const QUIET = 4;
+      const cell = 18;
+      const qrPx = (N + QUIET * 2) * cell;
+      const pad = 42;
+      const footH = 74;
+      const W = qrPx + pad * 2;
+      const H = qrPx + pad * 2 + footH;
+
+      canvas.width = W * S;
+      canvas.height = H * S;
+      canvas.style.aspectRatio = `${W} / ${H}`;
+      ctx.setTransform(S, 0, 0, S, 0, 0);
+
+      // Latar gelap seperti referensi, dengan area tenang QR tetap bersih.
+      ctx.fillStyle = "#050508";
+      ctx.fillRect(0, 0, W, H);
+
+      const qx = pad;
+      const qy = pad;
+      const dimmedColor = dimColor(currentColor);
+      const moduleInset = cell * 0.035;
+      const moduleSize = cell - moduleInset * 2;
+
+      // Semua modul QR tetap digambar. Modul di area hati lebih terang,
+      // sedangkan modul di luar hati dibuat lebih redup untuk membentuk siluet.
+      for (let row = 0; row < N; row++) {
+        for (let col = 0; col < N; col++) {
+          if (!qr.isDark(row, col)) continue;
+          const x = ((col + 0.5) / N) * 2 - 1;
+          const y = 1 - ((row + 0.5) / N) * 2;
+          const inHeart = isInsideHeart(x * 1.2, y * 1.2);
+          const isFinder =
+            (row < 8 && col < 8) ||
+            (row < 8 && col >= N - 8) ||
+            (row >= N - 8 && col < 8);
+
+          ctx.fillStyle = inHeart || isFinder ? currentColor : dimmedColor;
+          ctx.fillRect(
+            qx + (col + QUIET) * cell + moduleInset,
+            qy + (row + QUIET) * cell + moduleInset,
+            moduleSize,
+            moduleSize,
+          );
+        }
+      }
+
+      // Caption seperti contoh.
+      ctx.fillStyle = "#eee1e5";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "600 17px Georgia, serif";
+      ctx.fillText("OH MY, MY LOVE", W / 2, qy + qrPx + 38);
+      ctx.fillStyle = "#ff3158";
+      heartPath(ctx, W / 2, qy + qrPx + 58, 12);
+      ctx.fill();
+    }
+
+    function roundRect(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.arcTo(x + w, y, x + w, y + h, r);
+      c.arcTo(x + w, y + h, x, y + h, r);
+      c.arcTo(x, y + h, x, y, r);
+      c.arcTo(x, y, x + w, y, r);
+      c.closePath();
+    }
+
+    // swatches
+    document.getElementById("swatches").addEventListener("click", (e) => {
+      const b = e.target.closest(".swatch");
+      if (!b) return;
+      currentColor = b.dataset.color;
+      document.querySelectorAll(".swatch").forEach((s) => s.classList.toggle("on", s === b));
+      render();
+    });
+    customInput.addEventListener("input", () => {
+      currentColor = customInput.value;
+      document.querySelectorAll(".swatch").forEach((s) => s.classList.remove("on"));
+      render();
+    });
+
+    let t;
+    urlInput.addEventListener("input", () => {
+      clearTimeout(t);
+      t = setTimeout(render, 300);
+    });
+
+    document.getElementById("btn-download").addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.download = "qr-ucapan-firna.png";
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    });
+
+    render();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(render);
+    }
+  </script>
+</body>
+</html>

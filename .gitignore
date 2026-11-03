@@ -1,0 +1,14 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log
+
+# Node (kalau nanti dipakai untuk tooling)
+node_modules/
+
+# Jangan pernah commit rahasia
+.env
+.env.*
