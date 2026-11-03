@@ -192,14 +192,6 @@
       return sum * sum * sum - x * x * y * y * y <= 0;
     }
 
-    function dimColor(hex, factor = 0.48) {
-      const value = hex.replace("#", "");
-      const r = Math.round(parseInt(value.slice(0, 2), 16) * factor);
-      const g = Math.round(parseInt(value.slice(2, 4), 16) * factor);
-      const b = Math.round(parseInt(value.slice(4, 6), 16) * factor);
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-
     function render() {
       const url = urlInput.value.trim() || DEFAULT_URL;
       let qr;
@@ -217,59 +209,79 @@
       const S = 2;
       const N = qr.getModuleCount();
       const QUIET = 4;
-      const cell = 18;
-      const qrPx = (N + QUIET * 2) * cell;
-      const pad = 42;
-      const footH = 74;
-      const W = qrPx + pad * 2;
-      const H = qrPx + pad * 2 + footH;
+      const heartW = 580;
+      const heartH = 510;
+      const heartCell = 10;
+      const heartCols = Math.floor(heartW / heartCell);
+      const heartRows = Math.floor(heartH / heartCell);
+      const pad = 40;
+      const footH = 76;
+      const W = heartW + pad * 2;
+      const H = heartH + pad * 2 + footH;
 
       canvas.width = W * S;
       canvas.height = H * S;
       canvas.style.aspectRatio = `${W} / ${H}`;
       ctx.setTransform(S, 0, 0, S, 0, 0);
 
-      // Latar gelap seperti referensi, dengan area tenang QR tetap bersih.
+      // Latar gelap dan hati berupa mosaik piksel QR.
       ctx.fillStyle = "#050508";
       ctx.fillRect(0, 0, W, H);
 
-      const qx = pad;
-      const qy = pad;
-      const dimmedColor = dimColor(currentColor);
-      const moduleInset = cell * 0.035;
-      const moduleSize = cell - moduleInset * 2;
+      const heartLeft = (W - heartCols * heartCell) / 2;
+      const heartTop = pad;
+      for (let row = 0; row < heartRows; row++) {
+        for (let col = 0; col < heartCols; col++) {
+          const x = ((col + 0.5) / heartCols) * 2 - 1;
+          const y = 1 - ((row + 0.5) / heartRows) * 2;
+          if (!isInsideHeart(x * 1.12, y * 1.12)) continue;
 
-      // Semua modul QR tetap digambar. Modul di area hati lebih terang,
-      // sedangkan modul di luar hati dibuat lebih redup untuk membentuk siluet.
+          // Mosaik dekoratif diambil dari data QR, lalu dirangkai menjadi hati.
+          const sourceRow = Math.min(N - 1, Math.floor((row / heartRows) * N));
+          const sourceCol = Math.min(N - 1, Math.floor((col / heartCols) * N));
+          ctx.fillStyle = qr.isDark(sourceRow, sourceCol) ? currentColor : "#09080b";
+          ctx.fillRect(
+            heartLeft + col * heartCell + 0.7,
+            heartTop + row * heartCell + 0.7,
+            heartCell - 1.4,
+            heartCell - 1.4,
+          );
+        }
+      }
+
+      // QR yang membawa URL tetap utuh, dengan quiet zone, lalu diputar
+      // seperti pola berlian pada referensi.
+      const moduleSize = Math.min(8, (heartH / (Math.SQRT2 * (N + QUIET * 2))) * 0.92);
+      const codeSize = (N + QUIET * 2) * moduleSize;
+      const codeCenterX = W / 2;
+      const codeCenterY = heartTop + heartRows * heartCell / 2;
+      ctx.save();
+      ctx.translate(codeCenterX, codeCenterY);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = "#fff8fa";
+      ctx.fillRect(-codeSize / 2, -codeSize / 2, codeSize, codeSize);
+      ctx.fillStyle = currentColor;
       for (let row = 0; row < N; row++) {
         for (let col = 0; col < N; col++) {
           if (!qr.isDark(row, col)) continue;
-          const x = ((col + 0.5) / N) * 2 - 1;
-          const y = 1 - ((row + 0.5) / N) * 2;
-          const inHeart = isInsideHeart(x * 1.2, y * 1.2);
-          const isFinder =
-            (row < 8 && col < 8) ||
-            (row < 8 && col >= N - 8) ||
-            (row >= N - 8 && col < 8);
-
-          ctx.fillStyle = inHeart || isFinder ? currentColor : dimmedColor;
           ctx.fillRect(
-            qx + (col + QUIET) * cell + moduleInset,
-            qy + (row + QUIET) * cell + moduleInset,
+            -codeSize / 2 + (col + QUIET) * moduleSize,
+            -codeSize / 2 + (row + QUIET) * moduleSize,
             moduleSize,
             moduleSize,
           );
         }
       }
+      ctx.restore();
 
       // Caption seperti contoh.
       ctx.fillStyle = "#eee1e5";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "600 17px Georgia, serif";
-      ctx.fillText("OH MY, MY LOVE", W / 2, qy + qrPx + 38);
+      ctx.fillText("OH MY, MY LOVE", W / 2, heartTop + heartRows * heartCell + 34);
       ctx.fillStyle = "#ff3158";
-      heartPath(ctx, W / 2, qy + qrPx + 58, 12);
+      heartPath(ctx, W / 2, heartTop + heartRows * heartCell + 57, 12);
       ctx.fill();
     }
 
